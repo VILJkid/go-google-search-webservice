@@ -2,23 +2,26 @@ package main
 
 import (
 	"fmt"
-	"html"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 )
 
+const (
+	googleSearchURL = "https://www.google.com/search"
+)
+
 func filterQuery(query string) string {
 	query = strings.Join(strings.Fields(strings.TrimSpace(query)), " ")
-	query = strings.ReplaceAll(query, " ", "+")
-	query = html.EscapeString(query)
+	query = url.QueryEscape(query)
 	return query
 }
 
 func googleSearch(query, output string) (err error) {
-	searchURL := fmt.Sprintf("https://www.google.com/search?q=%s", filterQuery(query))
+	searchURL := fmt.Sprintf("%s?q=%s", googleSearchURL, filterQuery(query))
 
 	response, err := http.Get(searchURL)
 	if err != nil {
@@ -31,22 +34,12 @@ func googleSearch(query, output string) (err error) {
 		return
 	}
 
-	htmlFile, err := os.Create(output + ".html")
-	if err != nil {
-		return
-	}
-	defer htmlFile.Close()
-
-	_, err = htmlFile.Write(htmlContent)
-	if err != nil {
-		return
-	}
-
-	return
+	outputFile := output + ".html"
+	return os.WriteFile(outputFile, htmlContent, os.ModePerm)
 }
 
 func main() {
-	query := "Munchkin Cat"
+	query := "  Munchkin Cat   is   --    6  @  __  _ cute -  🐈  :) "
 	output := "index"
 	err := googleSearch(query, output)
 	if err != nil {
